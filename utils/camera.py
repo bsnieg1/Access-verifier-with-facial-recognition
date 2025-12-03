@@ -20,8 +20,8 @@ def camera():
             cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 55), 2)
             if x:
                 print(f"Face detected {int(x),int(y)}")
-            if int(x) == 157:
-                z = False
+
+
             roi_grey = grey[y:y+h, x:x+w]
             roi_color = img[y:y+h, x:x+w]
 
