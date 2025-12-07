@@ -1,4 +1,5 @@
 import cv2
+from services.qr_scanner import scan_qr
 
 z = True
 
@@ -25,6 +26,10 @@ def camera():
             roi_grey = grey[y:y+h, x:x+w]
             roi_color = img[y:y+h, x:x+w]
 
+        qr_result = scan_qr(img)
+
+        if qr_result:
+            print("QR kod:", qr_result)
         
         cv2.imshow('img', img)
         
