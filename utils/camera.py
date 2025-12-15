@@ -1,5 +1,6 @@
 import cv2
 from services.qr_scanner import scan_qr
+from services.user_service import get_user
 
 z = True
 
@@ -29,8 +30,12 @@ def camera():
         qr_result = scan_qr(img)
 
         if qr_result:
-            print("QR kod:", qr_result)
-        
+            user = get_user(qr_result)
+            if user:
+                print(f"Zeskanowano użytkownika: {user['name']} (ID: {qr_result})")
+            else:
+                print("cos jest nietego")
+
         cv2.imshow('img', img)
         
         k = cv2.waitKey(30) & 0xff
