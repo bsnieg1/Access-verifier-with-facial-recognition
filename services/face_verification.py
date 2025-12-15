@@ -5,16 +5,8 @@ import numpy as np
 
 
 class FaceVerification:
-    def __init__(self, known_faces_dir="known_faces"):
-        """
-        known_faces_dir structure:
-            known_faces/
-                alice/
-                    1.jpg
-                    2.jpg
-                bob/
-                    1.jpg
-        """
+    def __init__(self, known_faces_dir="data/known_faces"):
+
         
         self.known_face_encodings = []
         self.known_face_labels = []
@@ -38,6 +30,7 @@ class FaceVerification:
                 if encodings:
                     self.known_face_encodings.append(encodings[0])
                     self.known_face_labels.append(label)
+                    #print(self.known_face_encodings)
 
     def verify(self, frame):
         """

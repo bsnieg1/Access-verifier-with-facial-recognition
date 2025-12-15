@@ -4,3 +4,5 @@ numpy
 face_recognition_models
 cmake
 dlib
+qrcode[pil]
+
