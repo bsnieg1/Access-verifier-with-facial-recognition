@@ -5,7 +5,7 @@ import numpy as np
 
 
 class FaceVerification:
-    def __init__(self, known_faces_dir="data/known_faces"):
+    def __init__(self, known_faces_dir):
 
         
         self.known_face_encodings = []
@@ -30,7 +30,9 @@ class FaceVerification:
                 if encodings:
                     self.known_face_encodings.append(encodings[0])
                     self.known_face_labels.append(label)
-                    #print(self.known_face_encodings)
+                
+
+        
 
     def verify(self, frame):
         """

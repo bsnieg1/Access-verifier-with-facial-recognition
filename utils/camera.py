@@ -15,7 +15,7 @@ def camera():
 
     print("Camera is starting")
 
-    # instantiate face verifier
+
     x = None
     qr_scanned = False
     verifier = FaceVerification(known_faces_dir=os.path.join('data', 'known_faces'))
@@ -29,7 +29,7 @@ def camera():
         if qr_result:
             user = get_user(qr_result)
             if user:
-                print(f"Zeskanowano użytkownika: {user['name']} (ID: {qr_result})")
+                #print(f"Zeskanowano użytkownika: {user['name']} (ID: {qr_result})")
                 qr_scanned = True
                 
             else:
@@ -43,11 +43,10 @@ def camera():
 
             roi_grey = grey[y:y+h, x:x+w]
             roi_color = img[y:y+h, x:x+w]
-
         if qr_scanned and x:
-        
+
             verification_results = verifier.verify(img)
-            print(verification_results)
+            #print(verification_results)
             if verification_results:
                 for result in verification_results:
                     if result["label"] == user['name'] and result["confidence"] > 0.6:

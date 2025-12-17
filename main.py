@@ -17,6 +17,7 @@ while True:
         user_id = add_user(name)
 
         generate_qr(user_id, f"user_{user_id}.png")
+
         print(f"Użytkownik {name} dodany z ID {user_id}")
 
     elif choice == "2":
