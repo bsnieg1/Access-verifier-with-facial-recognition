@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin panel</title>
+</head>
+<body>
+    <h1>Użytkownicy</h1>
+
+    <table>
+  <tr>
+    <th>ID</th>
+    <th>imie</th>
+    <th>ma twarz?</th>
+    <th>ma QR?</th>
+
+  </tr>
+  {% for user in users %}
+  <tr>
+    <td>{{user.id}}</td>
+    <td><a href="/admin/users/{{user.id}}">{{user.name}}</a></td>
+    <td>{{"TAK" if user.has_face else "NIE"}}</td>
+    <td>{{"TAK" if user.has_QR else "NIE"}}</td>
+    
+  </tr>
+  {% endfor %}
+    </table>
+
+    <p>Przycisk do dodawania nowego usera</p>
+    <a href="users/new">
+        <button type="button">Dodaj!</button>
+    </a>
+
+</body>
+</html>

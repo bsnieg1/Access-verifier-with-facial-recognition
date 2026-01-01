@@ -5,4 +5,7 @@ face_recognition_models
 cmake
 dlib
 qrcode[pil]
-
+fastapi
+uvicorn
+jinja2
+python-multipart

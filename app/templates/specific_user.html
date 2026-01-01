@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Szczegolowy uzytkownik</title>
+</head>
+<body>
+    <h1>Użytkownik</h1>
+    <table>
+    <tr>
+        <th>ID</th>
+        <th>imie</th>
+        <th>ma twarz?</th>
+        <th>ma QR?</th>
+
+    </tr>
+    <tr>
+        <td>{{user.id}}</td>
+        <td>{{user.name}}</td>
+        <td>{{"TAK" if user.has_face else "NIE"}}</td>
+        <td>{{"TAK" if user.has_QR else "NIE"}}</td>
+        
+    </tr>
+    </table>
+
+    <a href="/admin/users">
+            <button type="button">Zabierz mnie stąd!</button>
+        </a>
+
+</body>
+</html>

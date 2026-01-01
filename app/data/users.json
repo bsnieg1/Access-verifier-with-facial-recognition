@@ -1,0 +1,32 @@
+{
+    "1": {
+        "name": "John Doe",
+        "has_qr": false,
+        "has_face": false
+    },
+    "2": {
+        "name": "Travis Scott",
+        "has_qr": true,
+        "has_face": true
+    },
+    "3": {
+        "name": "Tommy Sopran",
+        "has_qr": false,
+        "has_face": true
+    },
+    "4": {
+        "name": "Taco Hemingway",
+        "has_qr": true,
+        "has_face": false
+    },
+    "5": {
+        "name": "twuj start",
+        "has_qr": false,
+        "has_face": false
+    },
+    "6": {
+        "name": "ziomek 123",
+        "has_qr": false,
+        "has_face": false
+    }
+}
