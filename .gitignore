@@ -209,3 +209,6 @@ __marimo__/
 known_faces/
 data/qr_codes/*.png
 .idea/
+
+data/users.json
+data/qr_codes/

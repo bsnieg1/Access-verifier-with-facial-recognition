@@ -31,13 +31,42 @@ def create_user_form(request: Request):
 
 @router.get("/users/{user_id}")
 def render_user_detail(request: Request, user_id: int):
-    
     user = user_service.get_user(user_id)
 
     return templates.TemplateResponse(
         "specific_user.html",
         {"request": request, "user": user}
     )
+
+@router.post("/users/{user_id}/qr")
+def create_qr_user(user_id: int):
+    qr_generator.generate_qr(
+        data = str(user_id),
+        user_id = int(user_id)
+    )
+
+    return RedirectResponse(
+        url=f"/admin/users/{user_id}",
+        status_code=303
+    )
+
+@router.get("/users/{user_id}/face")
+def adding_face(user_id: int, request: Request):
+    return templates.TemplateResponse(
+        "get_face.html",
+        {
+            "request": request,
+            "user_id": user_id
+        }
+    )
+
+# @router.post("/users/{user_id}/face")
+# def save_face(user_id: int, 
+#     file: UploadFile = File(...), 
+#     verifier: FaceVerification = Depends(get_face_verifier)):
+
+
+
 
 @router.post("/users")
 def add_user(name: str = Form(...)):

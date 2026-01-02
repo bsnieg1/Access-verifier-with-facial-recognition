@@ -28,5 +28,21 @@
         "name": "ziomek 123",
         "has_qr": false,
         "has_face": false
+    },
+    "7": {
+        "name": "tomasz 67",
+        "has_qr": false
+    },
+    "8": {
+        "name": "grzegorz sniezko",
+        "has_face": false
+    },
+    "9": {
+        "name": "metro boomin",
+        "has_face": false
+    },
+    "10": {
+        "name": "tomek 123",
+        "has_face": false
     }
 }
