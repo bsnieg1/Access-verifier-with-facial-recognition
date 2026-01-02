@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dodaj twarz</title>
+</head>
+<body>
+    <h1>Dodawanie twarzy dla usera {{ user_id }}</h1>
+
+    
+    <video id="video" width="500" height="400" autoplay></video>
+    <br><br>
+
+    <button id="captureBtn">cyk</button>
+    <button id="confirmBtn" style="display:none; background:green; color:white;">Zapisz twarz</button>
+    <button onclick="history.back()">Anuluj</button>
+
+    <canvas id="canvas" width="500" height="400" style="display:none;"></canvas>
+
+    <p id="result"></p>
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const captureBtn = document.getElementById("captureBtn");
+        const confirmBtn = document.getElementById("confirmBtn");
+        const result = document.getElementById("result");
+
+        const userId = "{{ user_id }}";
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                result.innerText = "Brak dostępu do kamery: " + err.message;
+            });
+
+        let capturedBlob = null;
+
+        captureBtn.addEventListener("click", () => {
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.style.display = "block";
+            video.style.display = "none";
+            captureBtn.style.display = "none";
+            confirmBtn.style.display = "inline-block";
+
+            canvas.toBlob(blob => {
+                capturedBlob = blob;
+            }, "image/jpeg", 0.95);
+        });
+
+        confirmBtn.addEventListener("click", async () => {
+            if (!capturedBlob) return;
+
+            const formData = new FormData();
+            formData.append("file", capturedBlob, `face_${userId}.jpg`);
+
+            const response = await fetch(`/admin/users/${userId}/face`, {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                result.innerHTML = `<strong style="color:green;">Twarz zapisana pomyślnie!</strong><br>ID: ${userId}`;
+                confirmBtn.disabled = true;
+                setTimeout(() => {
+                    window.location.href = `/admin/users/${userId}`;
+                }, 2000);
+            } else {
+                const error = await response.json();
+                result.innerHTML = `<strong style="color:red;">Błąd: ${error.detail}</strong>`;
+            }
+        });
+    </script>
+</body>
+</html>

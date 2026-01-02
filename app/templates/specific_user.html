@@ -23,9 +23,30 @@
     </tr>
     </table>
 
+    <h1>Kod QR</h1>
+    {% if not user.has_QR %}
+    <p>uzytkownik nie ma kodu qr</p>
+    <form method="POST" action="/admin/users/{{user.id}}/qr">
+        <button type="submit">Stworz dla mnie kodzik qr!</button>
+    </a>
+    {% else %}
+    <p>kodzik qr tego usera</p>
+    <img src="/qr_codes/user_{{user.id}}.png" alt="Kodzik QR" width="150">
+    {% endif %}
+    <p></p>
+
+    
+    <form method="GET" action="/admin/users/{{user.id}}/face">
+        <button type="submit">{% if user.has_face %}zmien twarz{% else %}dodaj twarz{% endif %}</button>
+    <p></p>
+
+
     <a href="/admin/users">
-            <button type="button">Zabierz mnie stąd!</button>
-        </a>
+        <button type="button">Zabierz mnie stąd!😈😈</button>
+    </a>
+
+
+
 
 </body>
 </html>
