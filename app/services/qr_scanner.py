@@ -3,7 +3,7 @@ import cv2
 qr_detector = cv2.QRCodeDetector()
 
 
-def scan_qr(frame, draw_bbox=True):
+def scan_qr(frame, draw_bbox=False):
     data, bbox, _ = qr_detector.detectAndDecode(frame)
 
     if not data:

@@ -4,7 +4,11 @@ from pathlib import Path
 QR_DIR = Path("data/qr_codes")
 
 
-def generate_qr(data: str, filename: str = "qr.png"):
+def generate_qr(data: str, user_id: int):
+
+    QR_DIR.mkdir(parents=True, exist_ok=True)
+
+    filename: str = f"user_{user_id}.png"
     output_path = QR_DIR / filename
 
     qr = qrcode.QRCode(
@@ -22,3 +26,13 @@ def generate_qr(data: str, filename: str = "qr.png"):
 
     print(f"QR zapisany do: {output_path}")
     return output_path
+
+def has_qr(user_id: int):
+
+    qr_path = QR_DIR / f"user_{user_id}.png"
+    return qr_path.exists()
+
+def get_qr_path(user_id: int):
+
+    qr_path = QR_DIR / f"user_{user_id}.png"
+    return qr_path if qr_path.exists() else None

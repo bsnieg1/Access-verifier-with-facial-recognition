@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>skanik</title>
+</head>
+<body>
+    <h1>Skanowanie</h1>
+
+
+    <video id="video" width="400" autoplay></video>
+    <br></br>
+
+    <button id="scanBtn">Skanuj</button>
+
+    <canvas id="canvas" width="400" height="300" style ="display:none"></canvas>
+    <p id="result"></p>
+
+    <script>
+        const video = document.getElementById("video")
+        const canvas = document.getElementById("canvas")
+        const result = document.getElementById("result")
+        const scanBtn = document.getElementById("scanBtn")
+
+        const sessionId = "{{session_id }}"
+    
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                result.innerText = "Brak dostępu do kamery";
+            });
+
+        scanBtn.addEventListener("click", async () => {
+            console.log("Przycisk Skanuj kliknięty!");  // ← dodaj to
+            console.log("sessionId:", sessionId);
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append("file", blob, "frame.png");
+
+                const response = await fetch(
+                    `/verification/${sessionId}/qr`,
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+                const data = await response.json();
+
+                result.innerText = JSON.stringify(data, null, 2);
+            }, "image/png");
+        });
+        
+    </script>
+</body>
+</html>
