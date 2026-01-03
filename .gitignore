@@ -211,5 +211,6 @@ data/qr_codes/*.png
 .idea/
 
 data/users.json
-data/qr_codes/
-data/faces/
+/app/data/qr_codes/
+/app/data/faces/
+/app/data/users.json
