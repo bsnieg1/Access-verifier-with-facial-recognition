@@ -212,3 +212,4 @@ data/qr_codes/*.png
 
 data/users.json
 data/qr_codes/
+data/faces/
