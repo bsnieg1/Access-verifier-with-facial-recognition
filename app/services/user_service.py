@@ -26,7 +26,6 @@ def add_user(name: str):
 
     users[new_id] = {
         "name": name,
-        "has_face": False,
     }
 
     save_users(users)
@@ -65,6 +64,7 @@ def add_user(name: str):
 
 def get_user(user_id: int):
     from services import qr_generator
+    from services import face_manager
 
     users = load_users()
     user_data = users.get(str(user_id))
@@ -75,19 +75,21 @@ def get_user(user_id: int):
     return {
         "id": int(user_id),
         "name": user_data["name"],
-        "has_face": False,
+        "has_face": face_manager.has_face(int(user_id)),
         "has_QR": qr_generator.has_qr(int(user_id))
     }
 
 def get_users():
     from services import qr_generator
+    from services import face_manager
+
 
     users = load_users()
     return [
         {
             "id": int(user_id),
             "name": data["name"],
-            "has_face": False,
+            "has_face": face_manager.has_face(int(user_id)),
             "has_QR": qr_generator.has_qr(int(user_id))
         }
         for user_id, data in users.items()

@@ -10,10 +10,7 @@ from api.admin import router as admin_panel_router
 
 app = FastAPI(title="Factory Access System")
 
-
-
 templates = Jinja2Templates(directory="templates")
-
 
 @app.get("/")
 def index(request: Request):
@@ -36,4 +33,7 @@ app.include_router(
 )
 
 os.makedirs("data/qr_codes", exist_ok=True)
+os.makedirs("data/faces", exist_ok=True)
+
 app.mount("/qr_codes", StaticFiles(directory="data/qr_codes"), name="qr_codes")
+app.mount("/faces", StaticFiles(directory="data/faces"), name="faces")
