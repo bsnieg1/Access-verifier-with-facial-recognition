@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form, File, UploadFile
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from services import user_service
 from services import qr_generator
 from services import qr_scanner
+from services import face_manager
+from services import image_loader
 
 router = APIRouter()
 
@@ -60,11 +62,27 @@ def adding_face(user_id: int, request: Request):
         }
     )
 
-# @router.post("/users/{user_id}/face")
-# def save_face(user_id: int, 
-#     file: UploadFile = File(...), 
-#     verifier: FaceVerification = Depends(get_face_verifier)):
+@router.post("/users/{user_id}/face")
+async def save_face(user_id: int, 
+    file: UploadFile = File(...)):
+    
+    try:
+        image = await image_loader.load_image_from_upload(file)
 
+        face_manager.save_face_image(
+            image=image,
+            user_id = user_id
+        )
+        return RedirectResponse(
+                url=f"/admin/users/{user_id}",
+                status_code=303
+            )
+    except Exception as e:
+        print(f"❌ Błąd podczas zapisywania zdjęcia: {e}")
+        return RedirectResponse(
+            url=f"/admin/users/{user_id}",
+            status_code=303
+        )
 
 
 

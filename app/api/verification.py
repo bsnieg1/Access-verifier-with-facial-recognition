@@ -5,6 +5,9 @@ from models.verification import VerificationSession
 from services import qr_scanner
 from services import image_loader
 from services import user_service
+from services import face_verification_singleton
+from services import face_matcher
+
 
 router = APIRouter()
 
@@ -104,4 +107,69 @@ async def face_verify (session_id: str, file: UploadFile = File(...)):
     image = await image_loader.load_image_from_upload(file)
 
     user_id = session.user_id
+    
+@router.post("/{session_id}/face")
+async def verify_face(
+    session_id: str,
+    file: UploadFile = File(...)
+):
+    session = SESSIONS.get(session_id)
+
+    if not session:
+        return {
+            "session_id": session_id,
+            "error": "Sesja nie znaleziona (404)"
+        }
+
+    if session.status not in ["WAITING_FOR_FACE", "ACCESS DENIED"]:
+        return {
+            "status": "INVALID_STATE",
+            "expected": "WAITING_FOR_FACE",
+            "error": "Nieprawidłowy stan sesji. Oczekiwano WAITING_FOR_FACE."
+        }
+
+    image = await image_loader.load_image_from_upload(file)
+
+    user_id = session.user_id
+
+    user = user_service.get_user(user_id)
+    if not user:
+        return {"status": "USER_NOT_FOUND"}
+
+    is_match = face_matcher.verify_face_for_user(
+        image,
+        user_id=user_id,  
+        verifier=face_verification_singleton.face_verifier,
+        threshold=0.6
+    )
+
+    if not is_match:
+        session.status = "ACCESS_DENIED"
+        return {"status": "ACCESS_DENIED"}
+
+    session.status = "ACCESS_GRANTED"
+    return {
+        "status": "ACCESS_GRANTED",
+        "user_id": user_id
+    }
+
+@router.get("/{session_id}/success")
+def verification_success(request: Request, session_id: str):
+
+    session = SESSIONS.get(session_id)
+
+
+    if not session or session.status != "ACCESS_GRANTED":
+        return RedirectResponse(url="/", status_code=303)
+
+    user = user_service.get_user(session.user_id)
+
+    return templates.TemplateResponse(
+        "success.html",
+        {
+            "request": Request,
+            "user": user,
+            "session_id": session_id
+        }
+    )
     
