@@ -55,24 +55,23 @@
         confirmBtn.addEventListener("click", async () => {
             if (!capturedBlob) return;
 
+            result.innerHTML = `<strong>Zapisywanie...</strong>`;
+            confirmBtn.disabled = true;
+
             const formData = new FormData();
             formData.append("file", capturedBlob, `face_${userId}.jpg`);
 
-            const response = await fetch(`/admin/users/${userId}/face`, {
-                method: "POST",
-                body: formData
-            });
+            try {
+                await fetch(`/admin/users/${userId}/face`, {
+                    method: "POST",
+                    body: formData
+                });
 
-            if (response.ok) {
-                const data = await response.json();
-                result.innerHTML = `<strong style="color:green;">Twarz zapisana pomyślnie!</strong><br>ID: ${userId}`;
-                confirmBtn.disabled = true;
-                setTimeout(() => {
-                    window.location.href = `/admin/users/${userId}`;
-                }, 2000);
-            } else {
-                const error = await response.json();
-                result.innerHTML = `<strong style="color:red;">Błąd: ${error.detail}</strong>`;
+                window.location.href = `/admin/users/${userId}`;
+                
+            } catch (error) {
+                result.innerHTML = `<strong style="color:red;">Błąd: ${error.message}</strong>`;
+                confirmBtn.disabled = false;
             }
         });
     </script>

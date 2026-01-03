@@ -36,8 +36,24 @@
     <p></p>
 
     
-    <form method="GET" action="/admin/users/{{user.id}}/face">
+
+    {% if user.has_face %}
+    <h3>Zdjęcie twarzy</h3>
+    <img src="/faces/user_{{ user.id }}/user_{{ user.id }}_1.jpg" 
+        alt="Face of {{ user.name }}" style="max-width: 200px;">
+
+    {% else %}
+    <p>Brak zdjęcia twarzy</p>
+
+    {% endif %}
+    <!-- <form method="GET" action="/admin/users/{{user.id}}/face">
         <button type="submit">{% if user.has_face %}zmien twarz{% else %}dodaj twarz{% endif %}</button>
+    <p></p> -->
+    {% if not user.has_face %}
+    <form method="GET" action="/admin/users/{{user.id}}/face">
+        <button type="submit">dodaj twarz</button>
+    <p></p>
+    {% endif %}
     <p></p>
 
 
