@@ -9,3 +9,9 @@ fastapi
 uvicorn
 jinja2
 python-multipart
+dotenv
+itsdangerous
+passlib
+bcrypt
+hashlib
+secrets

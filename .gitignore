@@ -214,3 +214,4 @@ data/users.json
 /app/data/qr_codes/
 /app/data/faces/
 /app/data/users.json
+/app/api/generuj.py

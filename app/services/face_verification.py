@@ -1,101 +1,68 @@
+# app/services/face_verification.py
 import cv2
 import face_recognition
-import os
-import numpy as np
-
-
-import cv2
-import face_recognition
-import os
 import numpy as np
 from pathlib import Path
 
 
 class FaceVerification:
     def __init__(self, faces_base_dir: str = "data/faces"):
-       
         self.faces_base_dir = Path(faces_base_dir)
-        print(f"FaceVerification zainicjowany z folderem: {self.faces_base_dir}")
 
     def _load_encodings_for_user(self, user_id: int) -> list:
-        
         user_dir = self.faces_base_dir / f"user_{user_id}"
-        
+
         if not user_dir.exists():
-            print(f"Folder {user_dir} nie istnieje")
             return []
-        
+
         encodings = []
-        
+
         for image_file in user_dir.glob("*.jpg"):
             try:
                 image = face_recognition.load_image_file(str(image_file))
                 image_encodings = face_recognition.face_encodings(image)
-                
+
                 if image_encodings:
                     encodings.append(image_encodings[0])
-                    print(f"Załadowano encoding z {image_file.name}")
-                else:
-                    print(f"Nie wykryto twarzy w {image_file.name}")
-                    
+
             except Exception as e:
-                print(f" Błąd ładowania {image_file.name}: {e}")
-        
-        print(f"Załadowano {len(encodings)} encodingów dla user_{user_id}")
+                print(f"[FaceVerification] Error loading {image_file}: {e}")
+
         return encodings
 
     def verify_for_user(self, frame, user_id: int, threshold: float = 0.6) -> dict:
-        
         known_encodings = self._load_encodings_for_user(user_id)
-        
+
         if not known_encodings:
             return {
                 "match": False,
                 "confidence": 0.0,
                 "bbox": None,
-                "error": f"Brak zdjęć dla user_{user_id}"
+                "error": f"No reference photos for user_{user_id}"
             }
-        
+
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
         face_locations = face_recognition.face_locations(rgb)
         face_encodings = face_recognition.face_encodings(rgb, face_locations)
-        
+
         if not face_encodings:
             return {
                 "match": False,
                 "confidence": 0.0,
                 "bbox": None,
-                "error": "Nie wykryto twarzy na zdjęciu"
+                "error": "No face detected"
             }
-        
+
         test_encoding = face_encodings[0]
         bbox = face_locations[0]
-        
-        face_distances = face_recognition.face_distance(known_encodings, test_encoding)
-        
-        if len(face_distances) == 0:
-            return {
-                "match": False,
-                "confidence": 0.0,
-                "bbox": bbox,
-                "error": "Brak encodingów do porównania"
-            }
-        
-        best_distance = np.min(face_distances)
+
+        distances = face_recognition.face_distance(known_encodings, test_encoding)
+        best_distance = float(np.min(distances))
         confidence = 1 - best_distance
-        
-        match = confidence >= threshold
-        
-        print(f"Weryfikacja user_{user_id}: confidence={confidence:.3f}, match={match}")
-        print(f"Best distance: {best_distance:.3f}")
-        print(f"Confidence: {confidence:.3f}")
-        print(f"Threshold: {threshold}")
-        print(f"Match: {match}")
-        
+
         return {
-            "match": match,
-            "confidence": float(confidence),
+            "match": confidence >= threshold,
+            "confidence": confidence,
             "bbox": bbox,
             "user_id": user_id
         }
