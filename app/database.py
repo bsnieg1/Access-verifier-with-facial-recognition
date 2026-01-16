@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -18,6 +18,15 @@ class User(Base):
     face_image_path = Column(String)
     qr_image_path = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class AccessLog(Base):
+    __tablename__ = "access_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    status = Column(String)  
+    captured_image_path = Column(String, nullable=True)
 
 def init_db():
     Base.metadata.create_all(bind=engine)

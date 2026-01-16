@@ -7,7 +7,7 @@ from services import qr_generator
 from services import qr_scanner
 from services import face_manager
 from services import image_loader
-from database import get_db, User
+from database import get_db, User, AccessLog
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -107,7 +107,7 @@ def render_user_detail(
     )
 
 # QR-------------------
-@router.post("/users/{user_id}/qr")
+@router.post("/users/{user_id}/qr/create")
 def create_qr_user(
     user_id: int, 
     db: Session = Depends(get_db), 
@@ -222,3 +222,9 @@ async def login_post(request: Request, password: str = Form(...)):
 async def logout(request: Request):
     request.session.pop("admin_logged_in", None)
     return RedirectResponse(url="/admin/login", status_code=303)
+
+#LOGS-------
+@router.get("/logs")
+def get_logs(request: Request, db: Session = Depends(get_db), _ = Depends(auth.require_admin)):
+    all_logs = db.query(AccessLog).order_by(AccessLog.timestamp.desc()).all()
+    return templates.TemplateResponse("logs.html", {"request": request, "logs": all_logs})

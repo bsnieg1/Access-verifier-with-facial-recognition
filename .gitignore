@@ -216,3 +216,4 @@ data/users.json
 /app/data/users.json
 /app/api/generuj.py
 /app/factory.db
+/app/data/logs

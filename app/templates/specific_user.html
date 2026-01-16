@@ -26,8 +26,9 @@
     <h1>Kod QR</h1>
     {% if not user.qr_image_path %}
     <p>uzytkownik nie ma kodu qr</p>
-    <form method="POST" action="/admin/users/{{user.id}}/qr">
+    <form method="POST" action="/admin/users/{{user.id}}/qr/create">
         <button type="submit">Stworz dla mnie kodzik qr!</button>
+    </form>
     </a>
     {% else %}
     <p>kodzik qr tego usera</p>

@@ -6,8 +6,12 @@ from services import qr_scanner
 from services import image_loader
 from services import face_verification_singleton
 from services import face_matcher
+from services import face_manager
 
-from database import get_db, User
+from datetime import datetime
+import cv2
+from pathlib import Path
+from database import get_db, User, AccessLog
 import uuid
 from sqlalchemy.orm import Session
 
@@ -119,6 +123,25 @@ async def verify_face(
         verifier=face_verification_singleton.face_verifier,
         threshold=0.6
     )
+
+    log_dir = Path("data/logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    status_str = "SUCCESS" if is_match else "FAILED"
+    
+    filename = f"log_{status_str}_u{user_id}_{timestamp_str}.jpg"
+    log_path = log_dir / filename
+    
+    cv2.imwrite(str(log_path), image)
+
+    new_log = AccessLog(
+        user_id=user_id,
+        status=status_str,
+        captured_image_path=f"data/logs/{filename}"
+    )
+    db.add(new_log)
+    db.commit()
 
     if not is_match:
         session.status = "ACCESS_DENIED"

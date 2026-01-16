@@ -26,6 +26,7 @@ templates = Jinja2Templates(directory="templates")
 
 os.makedirs("data/qr_codes", exist_ok=True)
 os.makedirs("data/faces", exist_ok=True)
+os.makedirs("data/logs", exist_ok=True)
 
 app.mount("/data", StaticFiles(directory="data"), name="data")
 
