@@ -16,40 +16,45 @@
     </tr>
     <tr>
         <td>{{user.id}}</td>
-        <td>{{user.name}}</td>
-        <td>{{"TAK" if user.has_face else "NIE"}}</td>
-        <td>{{"TAK" if user.has_QR else "NIE"}}</td>
+        <td>{{user.full_name}}</td>
+        <td>{{"TAK" if user.face_image_path else "NIE"}}</td>
+        <td>{{"TAK" if user.qr_image_path else "NIE"}}</td>
         
     </tr>
     </table>
 
     <h1>Kod QR</h1>
-    {% if not user.has_QR %}
+    {% if not user.qr_image_path %}
     <p>uzytkownik nie ma kodu qr</p>
     <form method="POST" action="/admin/users/{{user.id}}/qr">
         <button type="submit">Stworz dla mnie kodzik qr!</button>
     </a>
     {% else %}
     <p>kodzik qr tego usera</p>
-    <img src="/qr_codes/user_{{user.id}}.png" alt="Kodzik QR" width="150">
+    <img src="/{{ user.qr_image_path }}" alt="Kodzik QR" width="150">
+    <br><br>
+    <form method="POST" action="/admin/users/{{ user.id }}/qr/delete">
+        <button type="submit">Usun kodzik</button>
+    </form>
     {% endif %}
     <p></p>
 
     
 
-    {% if user.has_face %}
+    {% if user.face_image_path %}
     <h3>Zdjęcie twarzy</h3>
-    <img src="/faces/user_{{ user.id }}/user_{{ user.id }}_1.jpg" 
+    <img src="/{{ user.face_image_path }}"
         alt="Face of {{ user.name }}" style="max-width: 200px;">
-
+    <p></p>
+    <form method="POST" action="/admin/users/{{ user.id }}/face/delete">
+        <button type="submit">usun twarz</button>
+    </form>
     {% else %}
     <p>Brak zdjęcia twarzy</p>
 
     {% endif %}
-    <!-- <form method="GET" action="/admin/users/{{user.id}}/face">
-        <button type="submit">{% if user.has_face %}zmien twarz{% else %}dodaj twarz{% endif %}</button>
-    <p></p> -->
-    {% if not user.has_face %}
+
+    {% if not user.face_image_path %}
     <form method="GET" action="/admin/users/{{user.id}}/face">
         <button type="submit">dodaj twarz</button>
     <p></p>

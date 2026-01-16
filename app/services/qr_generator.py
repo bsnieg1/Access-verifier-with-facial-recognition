@@ -25,14 +25,14 @@ def generate_qr(data: str, user_id: int):
     img.save(output_path)
 
     print(f"QR zapisany do: {output_path}")
-    return output_path
+    return f"data/qr_codes/user_{user_id}.png"
 
-def has_qr(user_id: int):
+# def has_qr(user_id: int):
 
-    qr_path = QR_DIR / f"user_{user_id}.png"
-    return qr_path.exists()
+#     qr_path = QR_DIR / f"user_{user_id}.png"
+#     return qr_path.exists()
 
-def get_qr_path(user_id: int):
+# def get_qr_path(user_id: int):
 
-    qr_path = QR_DIR / f"user_{user_id}.png"
-    return qr_path if qr_path.exists() else None
+#     qr_path = QR_DIR / f"user_{user_id}.png"
+#     return qr_path if qr_path.exists() else None

@@ -1,19 +1,20 @@
-from fastapi import APIRouter, Request, File, HTTPException, UploadFile
+from fastapi import APIRouter, Request, File, HTTPException, UploadFile, Depends
 from fastapi.templating import Jinja2Templates
 from models.verification import VerificationSession
 
 from services import qr_scanner
 from services import image_loader
-from services import user_service
 from services import face_verification_singleton
 from services import face_matcher
 
+from database import get_db, User
+import uuid
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 templates = Jinja2Templates(directory="templates")
 
-# tymczasowy storage w pamięci
 SESSIONS = {}
 
 
@@ -32,57 +33,37 @@ def start_verification(request: Request):
     )
 
 @router.post("/{session_id}/qr")
-async def qr_scan(request: Request, session_id: str, file: UploadFile = File(...)):
+async def qr_scan(
+    request: Request, 
+    session_id: str, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db)
+):
     session = SESSIONS.get(session_id)
-
     if not session:
-        return {
-            "session_id": session_id,
-            "error": "Sesja nie znaleziona (404)"
-        }
-        
+        return {"error": "Sesja nie znaleziona"}
 
-    if session.status != "WAITING_FOR_QR":
-        return {
-            "status": "INVALID_STATE",
-            "expected": "WAITING_FOR_QR",
-            "error": "Nieprawidłowy stan sesji. Oczekiwano WAITING_FOR_QR."
-        }
-        
-    
     image = await image_loader.load_image_from_upload(file)
-
     qr_data = qr_scanner.scan_qr(image, draw_bbox=False)
 
     if not qr_data:
-        return {
-            "status": "QR_NOT_FOUND",
-            "message": "Nie wykryto kodu QR",
-            "error": "Nie wykryto kodu QR"
-        }
-        
-    try:
-        user_id = int(qr_data)
-    except ValueError:
-        return {
-            "status": "INVALID_QR",
-            "message": "QR nie zawiera poprawnego user_id",
-            "error": "QR nie zawiera poprawnego user_id"
-        }
+        return {"status": "QR_NOT_FOUND", "message": "Nie wykryto kodu QR"}
+    
+    user = db.query(User).filter(User.qr_code_id == qr_data).first()
 
-    if not user_service.get_user(user_id):
+    if not user:
         return {
             "status": "USER_NOT_FOUND",
-            "error": "Użytkownik nie znaleziony"
+            "message": "Nieznany kod QR (brak użytkownika w bazie)"
         }
 
-    session.user_id = user_id
+    session.user_id = user.id
     session.status = "WAITING_FOR_FACE"
 
     return {
-        "status": "QR_OK",
-        "user_id": user_id,
-        "next_step": "FACE_VERIFICATION",
+        "status": "WAITING_FOR_FACE", 
+        "user_id": user.id,
+        "user_name": user.full_name,
         "success": True,
     }
 
@@ -111,65 +92,68 @@ async def face_verify (session_id: str, file: UploadFile = File(...)):
 @router.post("/{session_id}/face")
 async def verify_face(
     session_id: str,
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
 ):
     session = SESSIONS.get(session_id)
-
-    if not session:
-        return {
-            "session_id": session_id,
-            "error": "Sesja nie znaleziona (404)"
-        }
-
-    if session.status not in ["WAITING_FOR_FACE", "ACCESS DENIED"]:
-        return {
-            "status": "INVALID_STATE",
-            "expected": "WAITING_FOR_FACE",
-            "error": "Nieprawidłowy stan sesji. Oczekiwano WAITING_FOR_FACE."
-        }
+    if not session or session.status not in ["WAITING_FOR_FACE", "ACCESS_DENIED"]:
+        return {"error": "Nieprawidłowy stan sesji"}
 
     image = await image_loader.load_image_from_upload(file)
-
     user_id = session.user_id
 
-    user = user_service.get_user(user_id)
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        return {"status": "USER_NOT_FOUND"}
+         return {"status": "USER_NOT_FOUND"}
+
+    if not user.face_image_path or not face_manager.has_face(user.id):
+        session.status = "ACCESS_DENIED"
+        return {
+            "status": "ACCESS_DENIED", 
+            "message": "Błąd: Brak wzorca twarzy w systemie. Skontaktuj się z administratorem."
+        }
 
     is_match = face_matcher.verify_face_for_user(
         image,
-        user_id=user_id,  
+        user_id=user.id,
         verifier=face_verification_singleton.face_verifier,
         threshold=0.6
     )
 
     if not is_match:
         session.status = "ACCESS_DENIED"
-        return {"status": "ACCESS_DENIED"}
+        return {
+            "status": "ACCESS_DENIED", 
+            "message": "Twarz nie pasuje do wzorca. Spróbuj ponownie."
+        }
 
     session.status = "ACCESS_GRANTED"
     return {
         "status": "ACCESS_GRANTED",
-        "user_id": user_id
+        "redirect_url": f"/verification/{session_id}/success"
     }
 
 @router.get("/{session_id}/success")
-def verification_success(request: Request, session_id: str):
-
+def verification_success(
+    request: Request, 
+    session_id: str, 
+    db: Session = Depends(get_db) 
+):
     session = SESSIONS.get(session_id)
-
 
     if not session or session.status != "ACCESS_GRANTED":
         return RedirectResponse(url="/", status_code=303)
 
-    user = user_service.get_user(session.user_id)
+    user = db.query(User).filter(User.id == session.user_id).first()
+
+    if not user:
+        return RedirectResponse(url="/", status_code=303)
 
     return templates.TemplateResponse(
         "success.html",
         {
-            "request": Request,
+            "request": request, 
             "user": user,
             "session_id": session_id
         }
     )
-    

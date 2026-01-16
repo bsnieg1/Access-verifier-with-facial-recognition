@@ -83,33 +83,36 @@
         });
 
         faceBtn.addEventListener("click", async () => {
-            console.log("Weryfikacja twarzy...");
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        result.innerText = "Trwa weryfikacja twarzy...";
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            canvas.toBlob(async (blob) => {
-                const formData = new FormData();
-                formData.append("file", blob, "face.png");
+        canvas.toBlob(async (blob) => {
+            const formData = new FormData();
+            formData.append("file", blob, "face.png");
 
-                try {
-                    const response = await fetch(
-                        `/verification/${sessionId}/face`,
-                        {
-                            method: "POST",
-                            body: formData
-                        }
-                    );
+            try {
+                const response = await fetch(`/verification/${sessionId}/face`, {
+                    method: "POST",
+                    body: formData
+                });
 
-                    const data = await response.json();
-                    console.log("Odpowiedź weryfikacji twarzy:", data);
-                    result.innerText = JSON.stringify(data, null, 2);
-                    
-                } catch (error) {
-                    console.error("Błąd:", error);
-                    result.innerText = "Błąd: " + error.message;
+                const data = await response.json();
+                console.log("Wynik twarzy:", data);
+
+                if (data.status === "ACCESS_GRANTED") {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.message || "Odmowa dostępu");
+                    window.location.href = "/"; //
                 }
-            }, "image/png");
-        });
+            } catch (e) {
+                console.error(e);
+                result.innerText = "Błąd połączenia z serwerem";
+            }
+        }, "image/png");
+    });
         
     </script>
 </body>

@@ -13,5 +13,4 @@ dotenv
 itsdangerous
 passlib
 bcrypt
-hashlib
-secrets
+sqlalchemy

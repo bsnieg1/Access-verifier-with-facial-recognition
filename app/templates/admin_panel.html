@@ -13,15 +13,20 @@
     <th>imie</th>
     <th>ma twarz?</th>
     <th>ma QR?</th>
+    <th>usun</th>
 
   </tr>
   {% for user in users %}
   <tr>
     <td>{{user.id}}</td>
-    <td><a href="/admin/users/{{user.id}}">{{user.name}}</a></td>
-    <td>{{"TAK" if user.has_face else "NIE"}}</td>
-    <td>{{"TAK" if user.has_QR else "NIE"}}</td>
-    
+    <td><a href="/admin/users/{{user.id}}">{{user.full_name}}</a></td>
+    <td>{{"TAK" if user.face_image_path else "NIE"}}</td>
+    <td>{{"TAK" if user.qr_image_path else "NIE"}}</td>
+    <td>
+      <form action="/admin/users/{{ user.id }}/delete" method="post" onsubmit="return confirm('Czy na pewno?');">
+        <button type="submit" class="btn btn-danger btn-sm">Usuń</button>
+      </form>
+  </td>
   </tr>
   {% endfor %}
     </table>
@@ -32,9 +37,8 @@
     </a>
     <p></p>
     <form action="/" method="get" style="display: inline;">
-        <button type="submit">Powrót do strony głównej, wyloguj</button>
+      <button type="submit">Powrót do strony głównej, wyloguj</button>
     </form>
-    
 
 </body>
 </html>
