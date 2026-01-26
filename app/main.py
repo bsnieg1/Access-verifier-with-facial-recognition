@@ -1,14 +1,15 @@
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 from starlette.middleware.sessions import SessionMiddleware
 from dotenv import load_dotenv
-from database import init_db
 import os
+from pathlib import Path
 
-from api.verification import router as verification_router
-from api.admin import router as admin_panel_router
+from .database import init_db
+from .api.verification import router as verification_router
+from .api.admin import router as admin_panel_router
 
 load_dotenv()
 
@@ -22,13 +23,19 @@ app.add_middleware(
     max_age=3600
 )
 
-templates = Jinja2Templates(directory="templates")
+BASE_DIR = Path(__file__).parent.parent
+APP_DIR = Path(__file__).parent
+TEMPLATES_DIR = APP_DIR / "static" / "templates"
+STATIC_DIR = APP_DIR / "static"
 
-os.makedirs("data/qr_codes", exist_ok=True)
-os.makedirs("data/faces", exist_ok=True)
-os.makedirs("data/logs", exist_ok=True)
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-app.mount("/data", StaticFiles(directory="data"), name="data")
+os.makedirs(BASE_DIR / "data" / "qr_codes", exist_ok=True)
+os.makedirs(BASE_DIR / "data" / "faces", exist_ok=True)
+os.makedirs(BASE_DIR / "data" / "logs", exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/data", StaticFiles(directory=str(BASE_DIR / "data")), name="data")
 
 @app.get("/")
 def index(request: Request):
@@ -39,17 +46,7 @@ def index(request: Request):
         {"request": request}
     )
 
-
-app.include_router(
-    verification_router,
-    prefix="/verification",
-    tags=["verification"]
-)
-
-app.include_router(
-    admin_panel_router,
-    prefix="/admin",
-    tags=["admin_panel"]
-)
+app.include_router(verification_router, prefix="/verification", tags=["verification"])
+app.include_router(admin_panel_router, prefix="/admin", tags=["admin"])
 
 

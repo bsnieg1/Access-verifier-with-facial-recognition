@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sukces</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+<div class="container" style="text-align:center">
+
+<h1 style="animation:pop .6s ease-out">Dostęp przyznany ✔</h1>
+
+<p style="font-size: 18px; margin: 20px 0; line-height: 1.6;">
+    <strong>{{ user.full_name }}</strong>, Twoja tożsamość została potwierdzona.<br>
+    {% if entry_type == "WEJŚCIE" %}
+        Możesz teraz przejść do fabryki.
+    {% else %}
+        Wylogowałeś się z fabryki.
+        {% if duration_seconds %}
+            <br><span style="color: #1976d2; font-size: 16px; margin-top: 15px; display: block;">
+                <strong>Czas spędzony w fabryce:</strong><br>
+                {% set hours = duration_seconds // 3600 %}
+                {% set minutes = (duration_seconds % 3600) // 60 %}
+                {% set seconds = duration_seconds % 60 %}
+                {% if hours > 0 %}
+                    {{ hours }} h {{ minutes }} min {{ seconds }} s
+                {% elif minutes > 0 %}
+                    {{ minutes }} min {{ seconds }} s
+                {% else %}
+                    {{ seconds }} sekund
+                {% endif %}
+            </span>
+        {% endif %}
+    {% endif %}
+    <span style="color: #2e7d32; font-size: 16px; margin-top: 15px; display: block;">
+        Dostęp został zalogowany w systemie.
+    </span>
+</p>
+
+<a href="/"><button>Powrót do strony głównej</button></a>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Logi</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script defer src="/static/js/logs.js"></script>
+    <style>
+        .logs-container {
+            max-height: 70vh;
+            overflow-y: auto;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-top: 16px;
+        }
+        
+        .logs-container table {
+            margin-top: 0;
+        }
+        
+        .logs-container thead th {
+            position: sticky;
+            top: 0;
+            background: var(--white-glass);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Logi dostępu</h1>
+
+<div class="logs-container">
+<table>
+<thead>
+<tr>
+    <th>Data</th>
+    <th>User ID</th>
+    <th>Status</th>
+    <th>Typ</th>
+    <th>Czas spędzony</th>
+    <th>Zdjęcie</th>
+</tr>
+</thead>
+<tbody>
+
+{% for log in logs %}
+<tr class="{{ 'success' if log.status=='SUCCESS' else 'fail' }}">
+    <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+    <td>{{ log.user_id }}</td>
+    <td>{{ log.status }}</td>
+    <td>{{ log.entry_type or '-' }}</td>
+    <td>
+        {% if log.duration_seconds %}
+            {% set hours = log.duration_seconds // 3600 %}
+            {% set minutes = (log.duration_seconds % 3600) // 60 %}
+            {% set seconds = log.duration_seconds % 60 %}
+            {% if hours > 0 %}
+                {{ hours }}h {{ minutes }}m {{ seconds }}s
+            {% elif minutes > 0 %}
+                {{ minutes }}m {{ seconds }}s
+            {% else %}
+                {{ seconds }}s
+            {% endif %}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+    <td>
+        <img src="/{{ log.captured_image_path }}"
+             width="80"
+             onclick="openImage(this.src)"
+             style="cursor:pointer">
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+</div>
+</body>
+</html>

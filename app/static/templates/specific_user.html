@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Szczegóły użytkownika</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+<div class="container">
+
+<h1>{{ user.full_name }}</h1>
+
+<table>
+<tr>
+    <th>ID</th>
+    <th>Twarz</th>
+    <th>QR</th>
+</tr>
+<tr>
+    <td>{{ user.id }}</td>
+    <td>{{ "TAK" if user.face_image_path else "NIE" }}</td>
+    <td>{{ "TAK" if user.qr_image_path else "NIE" }}</td>
+</tr>
+</table>
+
+<br>
+
+<div style="display:flex; gap:40px; flex-wrap:wrap">
+
+<!-- QR -->
+<div>
+<h3>Kod QR</h3>
+{% if user.qr_image_path %}
+<img src="/{{ user.qr_image_path }}" width="160">
+<form method="POST" action="/admin/users/{{ user.id }}/qr/delete">
+    <button class="secondary">Usuń QR</button>
+</form>
+{% else %}
+<form method="POST" action="/admin/users/{{ user.id }}/qr/create">
+    <button>Generuj QR</button>
+</form>
+{% endif %}
+</div>
+
+<!-- FACE -->
+<div>
+<h3>Twarz</h3>
+{% if user.face_image_path %}
+<img src="/{{ user.face_image_path }}" width="160">
+<form method="POST" action="/admin/users/{{ user.id }}/face/delete">
+    <button class="secondary">Usuń twarz</button>
+</form>
+{% else %}
+<a href="/admin/users/{{ user.id }}/face">
+    <button>Dodaj twarz</button>
+</a>
+{% endif %}
+</div>
+
+</div>
+
+<br>
+<a href="/admin/users">
+    <button class="secondary">Powrót</button>
+</a>
+
+</div>
+</body>
+</html>

@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from passlib.context import CryptContext
 from dotenv import load_dotenv
+from pathlib import Path
 import os
 import hashlib
 import secrets
@@ -12,7 +13,8 @@ load_dotenv()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-templates = Jinja2Templates(directory="templates")  
+APP_DIR = Path(__file__).parent.parent
+templates = Jinja2Templates(directory=str(APP_DIR / "static" / "templates"))  
 
 def verify_password(plain_password: str):
     stored_value = os.getenv("ADMIN_PASSWORD_HASH")

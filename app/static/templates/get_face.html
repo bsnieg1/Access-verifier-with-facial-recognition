@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dodaj twarz</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script defer src="/static/js/toast.js"></script>
+</head>
+<body>
+<div class="container" style="text-align:center">
+
+<h1>Dodawanie twarzy</h1>
+
+<video id="video" width="400" autoplay></video>
+<canvas id="canvas" width="400" height="300" style="display:none"></canvas>
+
+<br><br>
+
+<button id="captureBtn">Zrób zdjęcie</button>
+<button id="confirmBtn" style="display:none">Zapisz</button>
+<button class="secondary" onclick="history.back()">Anuluj</button>
+
+<p id="result"></p>
+
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const captureBtn = document.getElementById("captureBtn");
+const confirmBtn = document.getElementById("confirmBtn");
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => video.srcObject = stream);
+
+let blob = null;
+
+captureBtn.onclick = () => {
+    canvas.getContext("2d").drawImage(video,0,0,400,300);
+    canvas.style.display="block";
+    video.style.display="none";
+    captureBtn.style.display="none";
+    confirmBtn.style.display="inline-block";
+
+    canvas.toBlob(b => blob = b, "image/jpeg");
+};
+
+confirmBtn.onclick = async () => {
+    const fd = new FormData();
+    fd.append("file", blob, "face.jpg");
+    await fetch(location.pathname, { method:"POST", body:fd });
+    showToast("Twarz zapisana ✔");
+    setTimeout(() => history.back(), 1500);
+};
+</script>
+
+</div>
+</body>
+</html>

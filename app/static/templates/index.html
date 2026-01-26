@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Factory Access</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script src="/static/js/background-phrases.js"></script>
+</head>
+<body>
+<div id="background-text"></div>
+<div class="container" style="max-width:600px; text-align:center">
+
+    <h1 style="font-size: 42px; margin-bottom: 30px;">Wejście do fabryki</h1>
+
+    <form action="/verification/start" method="post" style="margin-bottom: 20px;">
+        <button type="submit" style="padding: 18px 40px; font-size: 18px; width: 100%; max-width: 400px;">Rozpocznij weryfikację</button>
+    </form>
+
+    <br>
+
+    <form action="/admin/login" method="get">
+        <button class="secondary" type="submit" style="padding: 18px 40px; font-size: 18px; width: 100%; max-width: 400px;">Panel administratora</button>
+    </form>
+
+</div>
+</body>
+</html>

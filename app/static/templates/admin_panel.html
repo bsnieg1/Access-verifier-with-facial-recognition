@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin panel</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script>
+        function openAddUser() {
+            const modal = document.getElementById("modal");
+            if (!modal) {
+                console.error("Modal element not found");
+                return;
+            }
+
+            const modalContent = document.createElement("div");
+            modalContent.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 8px;
+                    padding: 30px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                    max-width: 400px;
+                    width: 90%;
+                ">
+                    <h2 style="margin: 0 0 20px 0; color: #333;">Nowy użytkownik</h2>
+                    <form id="addUserForm">
+                        <input 
+                            type="text" 
+                            id="userName" 
+                            name="name" 
+                            placeholder="Imię i nazwisko" 
+                            required
+                            style="
+                                width: 100%;
+                                padding: 10px;
+                                margin-bottom: 15px;
+                                border: 1px solid #ddd;
+                                border-radius: 4px;
+                                font-size: 14px;
+                                box-sizing: border-box;
+                            "
+                        >
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" style="flex: 1; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                                Dodaj
+                            </button>
+                            <button type="button" onclick="closeModal()" style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                Anuluj
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            modal.style.position = "fixed";
+            modal.style.top = "0";
+            modal.style.left = "0";
+            modal.style.width = "100%";
+            modal.style.height = "100%";
+            modal.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+            modal.style.display = "flex";
+            modal.style.justifyContent = "center";
+            modal.style.alignItems = "center";
+            modal.style.zIndex = "10000";
+
+            modal.innerHTML = "";
+            modal.appendChild(modalContent);
+
+            document.getElementById("addUserForm").addEventListener("submit", addUserSubmit);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("modal");
+            if (modal) {
+                modal.innerHTML = "";
+                modal.style.display = "none";
+            }
+        }
+
+        async function addUserSubmit(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById("userName").value.trim();
+            if (!name) {
+                alert("Proszę wpisać imię i nazwisko");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("name", name);
+
+            try {
+                const response = await fetch("/admin/users/new", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok || response.status === 303) {
+                    closeModal();
+                    window.location.reload();
+                } else {
+                    const errorText = await response.text();
+                    console.error("Error response:", errorText);
+                    alert("Błąd przy dodawaniu użytkownika. Status: " + response.status);
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+                alert("Błąd przy połączeniu: " + error.message);
+            }
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById("usersTable");
+            const rows = Array.from(table.rows).slice(1);
+            const asc = table.dataset.sortOrder !== "asc";
+
+            rows.sort((a, b) => {
+                const valA = a.cells[columnIndex].innerText.toLowerCase();
+                const valB = b.cells[columnIndex].innerText.toLowerCase();
+                return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+
+            rows.forEach(row => table.appendChild(row));
+            table.dataset.sortOrder = asc ? "asc" : "desc";
+        }
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Użytkownicy</h1>
+
+    <button onclick="window.location.href='/admin/users/new'" style="padding: 10px 20px; margin-bottom: 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        ➕ Dodaj użytkownika
+    </button>
+
+    <table id="usersTable" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead>
+            <tr style="background-color: #f5f5f5;">
+                <th onclick="sortTable(0)" style="padding: 10px; text-align: left; cursor: pointer; border: 1px solid #ddd;">ID</th>
+                <th onclick="sortTable(1)" style="padding: 10px; text-align: left; cursor: pointer; border: 1px solid #ddd;">Imię</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Twarz</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">QR</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Akcje</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Usuń</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 10px; border: 1px solid #ddd;">{{ user.id }}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{{ user.full_name }}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">
+                    {% if user.face_image_path %}
+                        <span style="color: green; font-weight: bold;">✓ TAK</span>
+                    {% else %}
+                        <span style="color: red;">✗ NIE</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px; border: 1px solid #ddd;">
+                    {% if user.qr_image_path %}
+                        <span style="color: green; font-weight: bold;">✓ TAK</span>
+                    {% else %}
+                        <span style="color: red;">✗ NIE</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px; border: 1px solid #ddd;">
+                    <div style="display: flex; gap: 5px;">
+                        <a href="/admin/users/{{ user.id }}">
+                            <button style="padding: 5px 10px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">⚙️ Stan</button>
+                        </a>
+                        {% if user.qr_image_path %}
+                        <a href="/admin/users/{{ user.id }}/qr/download" download>
+                            <button style="padding: 5px 10px; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">⬇️ QR</button>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+                <td style="padding: 10px; border: 1px solid #ddd;">
+                    <form action="/admin/users/{{ user.id }}/delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');" style="margin: 0;">
+                        <button type="submit" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Usuń</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 30px; display: flex; gap: 10px;">
+        <a href="/admin/logs">
+            <button style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">📋 Logi</button>
+        </a>
+        <a href="/">
+            <button style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Wyloguj</button>
+        </a>
+    </div>
+</div>
+
+<div id="modal"></div>
+
+</body>
+</html>

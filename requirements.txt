@@ -9,8 +9,9 @@ fastapi
 uvicorn
 jinja2
 python-multipart
-dotenv
+python-dotenv
 itsdangerous
 passlib
 bcrypt
 sqlalchemy
+starlette

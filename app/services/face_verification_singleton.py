@@ -1,4 +1,4 @@
-from services.face_verification import FaceVerification
+from .face_verification import FaceVerification
 
 FACE_DIR = "data/faces"
 

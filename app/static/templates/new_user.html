@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Nowy użytkownik</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script>
+        async function addNewUser(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById("userName").value.trim();
+            if (!name) {
+                alert("Proszę wpisać imię i nazwisko");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("name", name);
+
+            try {
+                const response = await fetch("/admin/users/new", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok || response.status === 303) {
+                    // Get the new user ID from the response or redirect
+                    window.location.href = "/admin/users";
+                } else {
+                    alert("Błąd przy dodawaniu użytkownika. Status: " + response.status);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Błąd przy połączeniu: " + error.message);
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="container" style="max-width:600px">
+
+    <h1>Nowy użytkownik</h1>
+
+    <form id="newUserForm" onsubmit="addNewUser(event)">
+        <div style="margin-bottom: 20px;">
+            <input
+                type="text"
+                id="userName"
+                name="name"
+                placeholder="Imię i nazwisko"
+                required
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;"
+            >
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" style="flex: 1; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Dodaj użytkownika
+            </button>
+            <a href="/admin/users" style="flex: 1;">
+                <button type="button" class="secondary" style="width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Anuluj
+                </button>
+            </a>
+        </div>
+    </form>
+
+    <p style="margin-top: 20px; color: #666; font-size: 14px;">
+        📝 <strong>Następnie:</strong> Po dodaniu użytkownika będziesz mógł dodać jego twarz i wygenerować kod QR z poziomu szczegółów użytkownika.
+    </p>
+
+</div>
+</body>
+</html>

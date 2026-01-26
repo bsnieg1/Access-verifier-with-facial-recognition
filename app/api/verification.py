@@ -1,23 +1,24 @@
-from fastapi import APIRouter, Request, File, HTTPException, UploadFile, Depends
+from fastapi import APIRouter, Request, File, HTTPException, UploadFile, Depends, Form
 from fastapi.templating import Jinja2Templates
-from models.verification import VerificationSession
+from ..models.verification import VerificationSession
 
-from services import qr_scanner
-from services import image_loader
-from services import face_verification_singleton
-from services import face_matcher
-from services import face_manager
+from ..services import qr_scanner
+from ..services import image_loader
+from ..services import face_verification_singleton
+from ..services import face_matcher
+from ..services import face_manager
 
 from datetime import datetime
 import cv2
 from pathlib import Path
-from database import get_db, User, AccessLog
+from ..database import get_db, User, AccessLog
 import uuid
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="templates")
+APP_DIR = Path(__file__).parent.parent
+templates = Jinja2Templates(directory=str(APP_DIR / "static" / "templates"))
 
 SESSIONS = {}
 
@@ -40,7 +41,8 @@ def start_verification(request: Request):
 async def qr_scan(
     request: Request, 
     session_id: str, 
-    file: UploadFile = File(...), 
+    file: UploadFile = File(...),
+    entry_type: str = Form(default="WEJŚCIE"),
     db: Session = Depends(get_db)
 ):
     session = SESSIONS.get(session_id)
@@ -61,13 +63,36 @@ async def qr_scan(
             "message": "Nieznany kod QR (brak użytkownika w bazie)"
         }
 
+    # Walidacja dla WEJŚCIA - sprawdzenie czy użytkownik już jest w fabryce
+    if entry_type == "WEJŚCIE":
+        last_entry = db.query(AccessLog).filter(
+            AccessLog.user_id == user.id,
+            AccessLog.entry_type == "WEJŚCIE",
+            AccessLog.status == "SUCCESS"
+        ).order_by(AccessLog.timestamp.desc()).first()
+        
+        last_exit = db.query(AccessLog).filter(
+            AccessLog.user_id == user.id,
+            AccessLog.entry_type == "WYJŚCIE",
+            AccessLog.status == "SUCCESS"
+        ).order_by(AccessLog.timestamp.desc()).first()
+        
+        # Jeśli ostatnie wejście jest nowsze niż ostatnie wyjście - już jest w fabryce
+        if last_entry and (not last_exit or last_entry.timestamp > last_exit.timestamp):
+            return {
+                "status": "ALREADY_INSIDE",
+                "message": "Jesteś już w fabryce! Najpierw musisz wyjść."
+            }
+
     session.user_id = user.id
+    session.entry_type = entry_type
     session.status = "WAITING_FOR_FACE"
 
     return {
         "status": "WAITING_FOR_FACE", 
         "user_id": user.id,
         "user_name": user.full_name,
+        "entry_type": entry_type,
         "success": True,
     }
 
@@ -135,10 +160,44 @@ async def verify_face(
     
     cv2.imwrite(str(log_path), image)
 
+    entry_type = getattr(session, 'entry_type', 'WEJŚCIE')
+    
+    # Obliczanie czasu spędzenia w fabryce dla wyjścia
+    duration_seconds = None
+    if entry_type == "WYJŚCIE" and status_str == "SUCCESS":
+        # Szukamy ostatniego WEJŚCIA tego użytkownika
+        last_entry = db.query(AccessLog).filter(
+            AccessLog.user_id == user_id,
+            AccessLog.entry_type == "WEJŚCIE",
+            AccessLog.status == "SUCCESS"
+        ).order_by(AccessLog.timestamp.desc()).first()
+        
+        # Szukamy ostatniego WYJŚCIA tego użytkownika
+        last_exit = db.query(AccessLog).filter(
+            AccessLog.user_id == user_id,
+            AccessLog.entry_type == "WYJŚCIE",
+            AccessLog.status == "SUCCESS"
+        ).order_by(AccessLog.timestamp.desc()).first()
+        
+        # Sprawdzenie czy można wyjść (musi być wejście i być nowsze niż ostatnie wyjście)
+        if not last_entry or (last_exit and last_exit.timestamp > last_entry.timestamp):
+            # Brak wejścia lub ostatni wpis to wyjście - nie można wyjść
+            session.status = "ACCESS_DENIED"
+            return {
+                "status": "ACCESS_DENIED", 
+                "message": "Nie możesz wyjść z fabryki, ponieważ nie masz zarejestrowanego wejścia!"
+            }
+        
+        now = datetime.utcnow()
+        duration = now - last_entry.timestamp
+        duration_seconds = int(duration.total_seconds())
+    
     new_log = AccessLog(
         user_id=user_id,
         status=status_str,
-        captured_image_path=f"data/logs/{filename}"
+        entry_type=entry_type,
+        captured_image_path=f"data/logs/{filename}",
+        duration_seconds=duration_seconds
     )
     db.add(new_log)
     db.commit()
@@ -172,11 +231,21 @@ def verification_success(
     if not user:
         return RedirectResponse(url="/", status_code=303)
 
+    # Pobierz ostatni log użytkownika aby pokazać czas spędzony
+    last_log = db.query(AccessLog).filter(
+        AccessLog.user_id == session.user_id
+    ).order_by(AccessLog.timestamp.desc()).first()
+    
+    entry_type = getattr(session, 'entry_type', 'WEJŚCIE')
+    duration_seconds = last_log.duration_seconds if last_log else None
+
     return templates.TemplateResponse(
         "success.html",
         {
             "request": request, 
             "user": user,
-            "session_id": session_id
+            "session_id": session_id,
+            "entry_type": entry_type,
+            "duration_seconds": duration_seconds
         }
     )

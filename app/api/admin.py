@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Request, Form, File, UploadFile, Depends
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+from pathlib import Path
 
 # from services import user_service
-from services import qr_generator
-from services import qr_scanner
-from services import face_manager
-from services import image_loader
-from database import get_db, User, AccessLog
+from ..services import qr_generator
+from ..services import qr_scanner
+from ..services import face_manager
+from ..services import image_loader
+from ..database import get_db, User, AccessLog
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -16,14 +17,15 @@ import shutil
 import os
 import uuid
 
-from utils import auth
+from ..utils import auth
 from dotenv import load_dotenv
 
 load_dotenv()
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="templates")
+APP_DIR = Path(__file__).parent.parent
+templates = Jinja2Templates(directory=str(APP_DIR / "static" / "templates"))
 
 
 # USERS-------------------
@@ -143,6 +145,29 @@ async def delete_qr_code(
         db.commit()
 
     return RedirectResponse(url=f"/admin/users/{user_id}", status_code=303)
+
+@router.get("/users/{user_id}/qr/download")
+def download_qr(
+    user_id: int, 
+    db: Session = Depends(get_db), 
+    _ = Depends(auth.require_admin)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user or not user.qr_image_path:
+        return HTMLResponse("QR code nie istnieje", status_code=404)
+    
+    # Remove 'app/' prefix if present, work relative to current directory
+    file_path = user.qr_image_path
+    if file_path.startswith("app/"):
+        file_path = file_path[4:]
+    
+    if not os.path.exists(file_path):
+        print(f"Szukam pliku: {file_path}")
+        print(f"Istnieje: {os.path.exists(file_path)}")
+        return HTMLResponse(f"Plik QR nie znaleziony: {file_path}", status_code=404)
+    
+    return FileResponse(path=file_path, filename=f"{user.full_name}_qr.png", media_type="image/png")
 
 # FACE-------------------
 @router.get("/users/{user_id}/face")
