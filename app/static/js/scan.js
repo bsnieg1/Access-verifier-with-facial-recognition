@@ -21,10 +21,20 @@ document.addEventListener("DOMContentLoaded", function() {
     const scanBtn = document.getElementById("scanBtn");
     const faceBtn = document.getElementById("faceBtn");
     const result = document.getElementById("result");
+    const entryTypeInputs = document.querySelectorAll('input[name="entry_type"]');
 
     // Extract session_id from URL or data attribute
     const sessionId = document.body.getAttribute("data-session-id") || 
                       new URLSearchParams(window.location.search).get("session_id");
+
+    // Radio buttony zawsze dostępne, bez żadnych ograniczeń
+    entryTypeInputs.forEach(input => {
+        input.addEventListener("change", function() {
+            // Zawsze pozwalaj zmienić typ wejścia
+            result.textContent = "";
+            result.style.color = "inherit";
+        });
+    });
 
     scanBtn.addEventListener("click", async function() {
         result.textContent = "Skanowanie...";

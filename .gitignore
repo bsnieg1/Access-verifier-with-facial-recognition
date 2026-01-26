@@ -207,13 +207,5 @@ marimo/_lsp/
 __marimo__/
 
 known_faces/
-data/qr_codes/*.png
 .idea/
 
-data/users.json
-/app/data/qr_codes/
-/app/data/faces/
-/app/data/users.json
-/app/api/generuj.py
-/app/factory.db
-/app/data/logs
